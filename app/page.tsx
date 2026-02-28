@@ -346,10 +346,16 @@ export default function Home() {
     const data = await res.json();
 
     if (!res.ok) {
-      showToast("Failed to create charge", "error");
-      setIsCharging(false);
-      return;
-    }
+  console.log("BACKEND ERROR:", data);
+  showToast(
+    typeof data?.error === "string"
+      ? data.error
+      : data?.error?.message || "Failed to create charge",
+    "error"
+  );
+  setIsCharging(false);
+  return;
+}
 
     const hostedUrl = data.hosted_url;
     const chargeId = data.charge_id;
