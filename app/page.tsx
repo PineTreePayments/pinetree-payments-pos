@@ -45,6 +45,8 @@ export default function Home() {
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "confirmed" | "failed">("pending");
   const [isCharging, setIsCharging] = useState(false);
 
+  const [transactions, setTransactions] = useState<any[]>([]);
+
   const formatCurrency = (value: number) =>
     (value / 100).toLocaleString("en-US", {
       minimumFractionDigits: 2,
@@ -94,6 +96,36 @@ export default function Home() {
 
     checkConnection();
   }, [session]);
+
+  useEffect(() => {
+  if (!session?.user?.id) return;
+
+  fetchTransactions();
+}, [session]);
+
+useEffect(() => {
+  if (!session?.user?.id) return;
+
+  const channel = supabase
+    .channel("transactions-channel")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "transactions",
+        filter: `merchant_id=eq.${session.user.id}`,
+      },
+      () => {
+        fetchTransactions();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [session]);
 
   useEffect(() => {
     const savedProvider = localStorage.getItem("provider") as Provider | null;
@@ -354,6 +386,20 @@ export default function Home() {
       showToast("Shift4 connection error", "error");
     }
   };
+
+  const fetchTransactions = async () => {
+  if (!session?.user?.id) return;
+
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("merchant_id", session.user.id)
+    .order("created_at", { ascending: false });
+
+  if (!error && data) {
+    setTransactions(data);
+  }
+};
 
   const toastClass = useMemo(() => {
     if (!toast) return "";
@@ -793,7 +839,39 @@ export default function Home() {
               <h2 className="text-xl font-semibold mb-4 text-black">
                 Transaction History
               </h2>
-              <p className="text-black">No transactions yet.</p>
+              {transactions.length === 0 ? (
+  <p className="text-black">No transactions yet.</p>
+) : (
+  <div className="space-y-3">
+    {transactions.map((tx) => (
+      <div
+        key={tx.id}
+        className="p-3 bg-gray-100 rounded-xl flex justify-between items-center"
+      >
+        <div>
+          <div className="font-semibold text-sm">
+            ${formatCurrency(tx.total_amount)}
+          </div>
+          <div className="text-xs text-gray-600">
+            {new Date(tx.created_at).toLocaleString()}
+          </div>
+        </div>
+
+        <div
+          className={`text-xs font-semibold ${
+            tx.status === "confirmed"
+              ? "text-green-600"
+              : tx.status === "failed"
+              ? "text-red-600"
+              : "text-blue-600"
+          }`}
+        >
+          {tx.status}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
             </CardWrapper>
           )}
         </div>
