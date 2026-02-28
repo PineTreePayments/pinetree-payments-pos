@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
-    const event = await req.json();
+    const rawBody = await req.text();
 
+    const signature =
+      req.headers.get("x-cc-webhook-signature") ||
+      req.headers.get("X-CC-Webhook-Signature");
+
+    if (!signature) {
+      console.error("Missing Coinbase signature header");
+      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+    }
+
+    const webhookSecret = process.env.COINBASE_WEBHOOK_SECRET!;
+
+    const computedSignature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(rawBody)
+      .digest("hex");
+
+    if (computedSignature !== signature) {
+      console.error("Invalid Coinbase signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+
+    const event = JSON.parse(rawBody);
     const charge = event?.event?.data;
 
     if (!charge?.id) {
@@ -39,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-
+    
   } catch (error) {
     console.error("Webhook error:", error);
     return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
