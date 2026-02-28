@@ -4,12 +4,15 @@ export async function POST(request: Request) {
   try {
     console.log("🔥 WEBHOOK HIT");
 
-    const body = await request.json();
-    console.log("RAW BODY:", JSON.stringify(body, null, 2));
+    const rawBody = await request.text();
+    console.log("RAW BODY STRING:", rawBody);
 
-    const eventType = body?.type;
-    const eventId = body?.id;
-    const chargeId = body?.data?.id;
+    const body = JSON.parse(rawBody);
+    console.log("PARSED BODY:", JSON.stringify(body, null, 2));
+
+    const eventType = body.type;
+    const eventId = body.id;
+    const chargeId = body.data?.id;
 
     console.log("EVENT TYPE:", eventType);
     console.log("EVENT ID:", eventId);
