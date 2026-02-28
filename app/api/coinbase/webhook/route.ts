@@ -8,11 +8,15 @@ export async function POST(request: Request) {
     console.log("RAW BODY STRING:", rawBody);
 
     const body = JSON.parse(rawBody);
-    console.log("PARSED BODY:", JSON.stringify(body, null, 2));
 
-    const eventType = body.type;
-    const eventId = body.id;
-    const chargeId = body.data?.id;
+    // Coinbase wraps payload inside "event"
+    const event = body.event ?? body;
+
+    console.log("FULL PARSED:", JSON.stringify(event, null, 2));
+
+    const eventType = event?.type;
+    const eventId = event?.id;
+    const chargeId = event?.data?.id ?? event?.data?.code ?? event?.data?.charge_id;
 
     console.log("EVENT TYPE:", eventType);
     console.log("EVENT ID:", eventId);
