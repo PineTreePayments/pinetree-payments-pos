@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   console.log("🔥 WEBHOOK HIT");
@@ -22,13 +19,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
-    // Verify Coinbase signature
+    // Verify signature
     const hmac = crypto.createHmac("sha256", webhookSecret);
     hmac.update(rawBody);
     const computedSignature = hmac.digest("hex");
 
     if (computedSignature !== signature) {
-      console.log("❌ Invalid webhook signature");
+      console.log("❌ Invalid signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
@@ -41,33 +38,31 @@ export async function POST(request: Request) {
     console.log("CHARGE ID:", chargeId);
     console.log("STATUS:", charge.status);
 
-    if (!chargeId) {
-      console.log("❌ No charge ID found");
-      return NextResponse.json({ ok: true });
+    // Initialize Supabase INSIDE handler (prevents Vercel build crash)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      console.log("❌ Supabase env vars missing");
+      return NextResponse.json({ error: "Supabase config missing" }, { status: 500 });
     }
 
-    // We only care about confirmed / resolved
-    if (
-      event.type === "charge:confirmed" ||
-      event.type === "charge:resolved"
-    ) {
-      console.log("✅ Marking transaction as confirmed");
+    const supabase = createClient(supabaseUrl, serviceKey);
 
-      const { error } = await supabase
+    if (event.type === "charge:confirmed" || event.type === "charge:resolved") {
+      console.log("✅ Marking confirmed");
+
+      await supabase
         .from("transactions")
         .update({
           status: "confirmed",
           confirmed_at: new Date().toISOString(),
         })
         .eq("provider_id", chargeId);
+    }
 
-      if (error) {
-        console.log("❌ Supabase update error:", error);
-      } else {
-        console.log("✅ Supabase updated successfully");
-      }
-    } else if (event.type === "charge:failed") {
-      console.log("❌ Marking transaction as failed");
+    if (event.type === "charge:failed") {
+      console.log("❌ Marking failed");
 
       await supabase
         .from("transactions")
@@ -75,8 +70,6 @@ export async function POST(request: Request) {
           status: "failed",
         })
         .eq("provider_id", chargeId);
-    } else {
-      console.log("ℹ️ Ignoring event type:", event.type);
     }
 
     return NextResponse.json({ received: true });
