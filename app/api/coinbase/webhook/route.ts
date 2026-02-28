@@ -1,70 +1,87 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: NextRequest) {
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function POST(request: Request) {
+  console.log("🔥 WEBHOOK HIT");
+
   try {
-    const rawBody = await req.text();
+    const rawBody = await request.text();
+    console.log("RAW BODY:", rawBody);
 
-    const signature =
-      req.headers.get("x-cc-webhook-signature") ||
-      req.headers.get("X-CC-Webhook-Signature");
+    const signature = request.headers.get("x-cc-webhook-signature");
+    const webhookSecret = process.env.COINBASE_WEBHOOK_SECRET;
 
-    if (!signature) {
-      console.error("Missing Coinbase signature header");
+    if (!signature || !webhookSecret) {
+      console.log("❌ Missing signature or webhook secret");
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
-    const webhookSecret = process.env.COINBASE_WEBHOOK_SECRET!;
-
-    const computedSignature = crypto
-      .createHmac("sha256", webhookSecret)
-      .update(rawBody)
-      .digest("hex");
+    // Verify Coinbase signature
+    const hmac = crypto.createHmac("sha256", webhookSecret);
+    hmac.update(rawBody);
+    const computedSignature = hmac.digest("hex");
 
     if (computedSignature !== signature) {
-      console.error("Invalid Coinbase signature");
+      console.log("❌ Invalid webhook signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
     const event = JSON.parse(rawBody);
-    const charge = event?.event?.data;
+    console.log("EVENT TYPE:", event.type);
 
-    if (!charge?.id) {
-      return NextResponse.json({ received: false }, { status: 400 });
+    const charge = event.data;
+    const chargeId = charge.id;
+
+    console.log("CHARGE ID:", chargeId);
+    console.log("STATUS:", charge.status);
+
+    if (!chargeId) {
+      console.log("❌ No charge ID found");
+      return NextResponse.json({ ok: true });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // We only care about confirmed / resolved
+    if (
+      event.type === "charge:confirmed" ||
+      event.type === "charge:resolved"
+    ) {
+      console.log("✅ Marking transaction as confirmed");
 
-    const timeline = charge.timeline || [];
-    const latestStatus = timeline[timeline.length - 1]?.status;
-
-    if (latestStatus === "CONFIRMED") {
-      await supabase
+      const { error } = await supabase
         .from("transactions")
         .update({
           status: "confirmed",
-          completed_at: new Date().toISOString(),
+          confirmed_at: new Date().toISOString(),
         })
-        .eq("provider_transaction_id", charge.id);
-    }
+        .eq("provider_id", chargeId);
 
-    if (latestStatus === "FAILED" || latestStatus === "EXPIRED") {
+      if (error) {
+        console.log("❌ Supabase update error:", error);
+      } else {
+        console.log("✅ Supabase updated successfully");
+      }
+    } else if (event.type === "charge:failed") {
+      console.log("❌ Marking transaction as failed");
+
       await supabase
         .from("transactions")
         .update({
           status: "failed",
         })
-        .eq("provider_transaction_id", charge.id);
+        .eq("provider_id", chargeId);
+    } else {
+      console.log("ℹ️ Ignoring event type:", event.type);
     }
 
     return NextResponse.json({ received: true });
-    
-  } catch (error) {
-    console.error("Webhook error:", error);
-    return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+  } catch (err) {
+    console.log("❌ WEBHOOK ERROR:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
