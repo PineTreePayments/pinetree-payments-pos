@@ -116,48 +116,6 @@ export default function Home() {
     localStorage.setItem("apiConnected", "false");
   }, [provider, hydrated]);
 
-  useEffect(() => {
-    if (!coinbaseChargeId || currentPage !== "processing") return;
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch("/api/coinbase/check-charge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chargeId: coinbaseChargeId,
-            merchant_id: session?.user?.id,
-          }),
-        });
-
-        const data = await res.json();
-        const latestStatus = data.status;
-
-        if (latestStatus === "confirmed") {
-          setPaymentStatus("confirmed");
-          clearInterval(interval);
-
-          setTimeout(() => {
-  setCurrentPage("pos");
-  setCents(0);
-  setCoinbaseHostedUrl(null);
-  setCoinbaseChargeId(null);
-  setIsCharging(false);
-}, 2500);
-        }
-
-        if (latestStatus === "failed" || latestStatus === "expired") {
-          setPaymentStatus("failed");
-          clearInterval(interval);
-        }
-      } catch (err) {
-        console.error("Polling error:", err);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [coinbaseChargeId, currentPage, session]);
-
   const handleLogin = async () => {
     const e = email.trim();
     const p = password.trim();
@@ -332,7 +290,7 @@ export default function Home() {
   const total = cents + platformFee;
 
   console.log("SESSION USER ID:", session?.user?.id);
-  
+
   try {
     const res = await fetch("/api/coinbase/create-charge", {
       method: "POST",
