@@ -136,15 +136,22 @@ useEffect(() => {
   updated &&
   updated.provider_transaction_id === coinbaseChargeId
 ) {
-  if (updated.status === "confirmed") {
-    setPaymentStatus("processing");
+  if (updated.status === "pending") {
+  setPaymentStatus("pending");
+}
 
-    setTimeout(() => {
-      setPaymentStatus("confirmed");
-    }, 1200);
-  } else {
-    setPaymentStatus(updated.status);
-  }
+if (updated.status === "confirmed") {
+  // show processing immediately
+  setPaymentStatus("processing");
+
+  setTimeout(() => {
+    setPaymentStatus("confirmed");
+  }, 400); // shorter = feels instant
+}
+
+if (updated.status === "failed") {
+  setPaymentStatus("failed");
+}
 }
       }
     )
