@@ -778,22 +778,24 @@ useEffect(() => {
                   Scan to Pay
                 </h2>
 
-                <div className="flex justify-center mb-6">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                      coinbaseHostedUrl
-                    )}`}
-                    alt="QR Code"
-                    className="rounded-xl shadow-md"
-                  />
-                </div>
+                {paymentStatus !== "confirmed" && (
+  <div className="flex justify-center mb-6">
+    <img
+      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+        coinbaseHostedUrl
+      )}`}
+      alt="QR Code"
+      className="rounded-xl shadow-md"
+    />
+  </div>
+)}
 
                 {paymentStatus === "confirmed" ? (
-  <div className="flex flex-col items-center justify-center py-10">
-    <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
+  <div className="flex flex-col items-center justify-center min-h-[350px]">
+    <div className="w-36 h-36 rounded-full bg-green-500 flex items-center justify-center shadow-xl">
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-12 w-12 text-white"
+        className="h-20 w-20 text-white"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -807,7 +809,7 @@ useEffect(() => {
       </svg>
     </div>
 
-    <h3 className="text-lg font-semibold mt-6 text-green-600">
+    <h3 className="text-2xl font-semibold mt-6 text-green-600 text-center">
       Payment Confirmed
     </h3>
   </div>
