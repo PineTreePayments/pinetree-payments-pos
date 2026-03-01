@@ -533,14 +533,21 @@ useEffect(() => {
             ☰
           </button>
 
-          {currentPage === "processing" && (
-            <button
-              onClick={() => goTo("pos")}
-              className="text-base font-semibold text-black hover:text-blue-600 transition -tracking-[1px]"
-            >
-              {"<<<"}
-            </button>
-          )}
+          {(currentPage === "processing" ||
+  currentPage === "transactionDetail") && (
+  <button
+    onClick={() => {
+      if (currentPage === "transactionDetail") {
+        setCurrentPage("transactions");
+      } else {
+        goTo("pos");
+      }
+    }}
+    className="text-base font-semibold text-black hover:text-blue-600 transition -tracking-[1px]"
+  >
+    {"<<<"}
+  </button>
+)}
         </div>
 
         <div className="relative z-10">
@@ -897,6 +904,73 @@ useEffect(() => {
 
             </CardWrapper>
           )}
+          {currentPage === "transactionDetail" && selectedTx && (
+  <CardWrapper>
+    <div className="text-center mb-6">
+      <h2 className="text-xl font-semibold text-black">
+        Transaction Details
+      </h2>
+    </div>
+
+    <div className="space-y-4 text-sm text-black">
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">Amount</span>
+        <span className="font-semibold">
+          ${formatCurrency(selectedTx.total_amount)}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">Status</span>
+        <span
+          className={`font-semibold ${
+            selectedTx.status === "confirmed"
+              ? "text-green-600"
+              : selectedTx.status === "failed"
+              ? "text-red-600"
+              : "text-blue-600"
+          }`}
+        >
+          {selectedTx.status}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">Created</span>
+        <span>
+          {new Date(selectedTx.created_at).toLocaleString()}
+        </span>
+      </div>
+
+      {selectedTx.provider_transaction_id && (
+        <div>
+          <span className="text-gray-500 text-xs">
+            Transaction ID
+          </span>
+
+          <div className="mt-2 flex items-center justify-between bg-gray-100 rounded-lg px-3 py-2">
+            <span className="truncate text-xs">
+              {selectedTx.provider_transaction_id}
+            </span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  selectedTx.provider_transaction_id
+                );
+                showToast("Copied to clipboard", "success");
+              }}
+              className="text-xs text-blue-600 hover:underline ml-2"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  </CardWrapper>
+)}
         </div>
 
         {toast && (
