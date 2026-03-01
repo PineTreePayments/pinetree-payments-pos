@@ -832,24 +832,7 @@ useEffect(() => {
   </>
 )}
 
-                  <div className="mt-4 flex items-center justify-center gap-2">
-                    <div
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        paymentStatus === "confirmed"
-                          ? "bg-green-500"
-                          : paymentStatus === "failed"
-                          ? "bg-red-500"
-                          : "bg-blue-500 animate-pulse"
-                      }`}
-                    />
-                    {paymentStatus !== "confirmed" && (
-  <span className="text-xs text-gray-600">
-    {paymentStatus === "failed"
-      ? "Payment failed or expired."
-      : "Waiting for payment confirmation..."}
-  </span>
-)}
-                  </div>
+
                 </div>
             </CardWrapper>
           )}
