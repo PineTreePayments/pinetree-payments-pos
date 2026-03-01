@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-type Page = "dashboard" | "pos" | "confirm" | "processing" | "transactions";
+type Page =
+  | "dashboard"
+  | "pos"
+  | "confirm"
+  | "processing"
+  | "transactions"
+  | "transactionDetail";
 type Provider = "Shift4" | "Coinbase Commerce";
 
 function CardWrapper({ children }: { children: React.ReactNode }) {
@@ -858,7 +864,10 @@ useEffect(() => {
     {transactions.map((tx) => (
   <div
     key={tx.id}
-    onClick={() => setSelectedTx(tx)}
+    onClick={() => {
+  setSelectedTx(tx);
+  setCurrentPage("transactionDetail");
+}}
     className="p-3 bg-gray-100 rounded-xl flex justify-between items-center cursor-pointer hover:bg-gray-200 transition"
   >
         <div>
@@ -885,83 +894,7 @@ useEffect(() => {
     ))}
   </div>
 )}
-{selectedTx && (
-  <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-md animate-fade-in">
 
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-semibold">Transaction Details</h3>
-      <button
-        onClick={() => setSelectedTx(null)}
-        className="text-sm text-gray-500 hover:text-black"
-      >
-        Close
-      </button>
-    </div>
-
-    <div className="space-y-3 text-sm">
-
-      <div className="flex justify-between">
-        <span className="text-gray-500">Amount</span>
-        <span className="font-semibold">
-          ${formatCurrency(selectedTx.total_amount)}
-        </span>
-      </div>
-
-      <div className="flex justify-between">
-        <span className="text-gray-500">Status</span>
-        <span className={`font-semibold ${
-          selectedTx.status === "confirmed"
-            ? "text-green-600"
-            : selectedTx.status === "failed"
-            ? "text-red-600"
-            : "text-blue-600"
-        }`}>
-          {selectedTx.status}
-        </span>
-      </div>
-
-      <div className="flex justify-between">
-        <span className="text-gray-500">Created</span>
-        <span>{new Date(selectedTx.created_at).toLocaleString()}</span>
-      </div>
-
-      {selectedTx.provider && (
-        <div className="flex justify-between">
-          <span className="text-gray-500">Provider</span>
-          <span>{selectedTx.provider}</span>
-        </div>
-      )}
-
-      {selectedTx.network && (
-        <div className="flex justify-between">
-          <span className="text-gray-500">Network</span>
-          <span>{selectedTx.network}</span>
-        </div>
-      )}
-
-      {selectedTx.provider_transaction_id && (
-        <div className="flex flex-col">
-          <span className="text-gray-500 mb-1">Transaction ID</span>
-          <div className="flex items-center justify-between bg-gray-100 rounded-lg px-3 py-2">
-            <span className="truncate text-xs">
-              {selectedTx.provider_transaction_id}
-            </span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(selectedTx.provider_transaction_id);
-                showToast("Copied to clipboard", "success");
-              }}
-              className="text-xs text-blue-600 hover:underline ml-2"
-            >
-              Copy
-            </button>
-          </div>
-        </div>
-      )}
-
-    </div>
-  </div>
-)}
             </CardWrapper>
           )}
         </div>
