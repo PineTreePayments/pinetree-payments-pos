@@ -266,6 +266,14 @@ if (updated.status === "failed") {
     setApiConnected(false);
   };
 
+const resetPaymentState = () => {
+  setCents(0);
+  setCoinbaseHostedUrl(null);
+  setCoinbaseChargeId(null);
+  setPaymentStatus("pending");
+  setIsCharging(false);
+};
+
   const goTo = (page: Page) => {
     setMenuOpen(false);
     if (currentPage === "processing" && page === "pos") {
@@ -559,7 +567,8 @@ if (updated.status === "failed") {
     onClick={() => {
       if (currentPage === "transactionDetail") {
         setCurrentPage("transactions");
-      } else {
+           } else {
+        resetPaymentState();
         goTo("pos");
       }
     }}
@@ -574,14 +583,24 @@ if (updated.status === "failed") {
           {currentPage === "dashboard" && (
             <CardWrapper>
               <div className="absolute top-6 right-6 flex items-center gap-2">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    apiConnected ? "bg-green-500" : "bg-red-500"
-                  }`}
-                />
-                <span className="text-xs font-medium text-black">
-                  {apiConnected ? "Configured" : "Not Configured"}
-                </span>
+                <div className="absolute top-6 right-6 flex items-center gap-2">
+  <div
+    className={`w-3 h-3 rounded-full ${
+      provider === "Coinbase Commerce"
+        ? apiConnected
+          ? "bg-green-500"
+          : "bg-red-500"
+        : "bg-gray-400"
+    }`}
+  />
+  <span className="text-xs font-medium text-black">
+    {provider === "Coinbase Commerce"
+      ? apiConnected
+        ? "Configured"
+        : "Not Configured"
+      : "Application Required"}
+  </span>
+</div>
               </div>
 
               <h2 className="text-xl font-semibold mb-6 text-black">
