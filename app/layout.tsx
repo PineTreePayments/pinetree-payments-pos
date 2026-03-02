@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description:
     "Crypto-enabled merchant POS platform for modern businesses. Accept digital assets seamlessly in-store and online.",
 
-  metadataBase: new URL("https://pinetree-payments.com"), // change if needed
+  metadataBase: new URL("https://pos.pinetree-payments.com"), // change if needed
 
   
 
