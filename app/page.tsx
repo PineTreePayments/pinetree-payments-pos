@@ -1161,6 +1161,32 @@ If you do not agree to these Terms and Disclosures, you must immediately discont
           </div>
         )}
 
+{showShift4Modal && shift4Url && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="relative w-[90vw] h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+      {/* Close Button */}
+      <button
+        onClick={() => {
+          setShowShift4Modal(false);
+          setShift4Url(null);
+        }}
+        className="absolute top-4 right-4 z-50 bg-white rounded-full px-3 py-1 text-sm font-semibold shadow hover:bg-gray-100"
+      >
+        ✕ Close
+      </button>
+
+      {/* Embedded Shift4 Site */}
+      <iframe
+        src={shift4Url}
+        className="w-full h-full border-0"
+        allow="clipboard-write; fullscreen"
+      />
+
+    </div>
+  </div>
+)}
+
         {/* ✅ FIXED SIDEBAR — NO LONGER DEPENDENT ON showShift4Modal */}
         <div
           onClick={(e) => e.stopPropagation()}
