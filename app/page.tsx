@@ -892,7 +892,15 @@ const resetPaymentState = () => {
 
 {paymentStatus === "pending" && "Waiting for Payment"}
 {paymentStatus === "pending" && timeLeft !== null && (
-  <div className="mt-2 text-xs text-gray-500">
+  <div
+    className={`mt-2 text-xs text-center w-full font-medium ${
+      timeLeft > 4 * 60 * 1000
+        ? "text-green-600"
+        : timeLeft > 60 * 1000
+        ? "text-yellow-500"
+        : "text-red-600"
+    }`}
+  >
     Expires in {Math.floor(timeLeft / 60000)}:
     {String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, "0")}
   </div>
