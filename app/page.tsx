@@ -49,8 +49,9 @@ export default function Home() {
   const [coinbaseHostedUrl, setCoinbaseHostedUrl] = useState<string | null>(null);
   const [coinbaseChargeId, setCoinbaseChargeId] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<
-  "pending" | "processing" | "confirmed" | "failed"
+  "pending" | "processing" | "confirmed" | "failed" | "expired"
 >("pending");
+const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isCharging, setIsCharging] = useState(false);
 
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -111,6 +112,23 @@ export default function Home() {
 
   fetchTransactions();
 }, [session]);
+
+useEffect(() => {
+  if (!coinbaseChargeId || paymentStatus !== "pending") return;
+
+  const expiryTime = Date.now() + 7 * 60 * 1000;
+
+  const interval = setInterval(() => {
+    const remaining = Math.max(0, expiryTime - Date.now());
+    setTimeLeft(remaining);
+
+    if (remaining === 0) {
+      clearInterval(interval);
+    }
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [coinbaseChargeId, paymentStatus]);
 
 useEffect(() => {
   if (!session?.user?.id) return;
@@ -271,7 +289,7 @@ const cancelPendingTransaction = async () => {
   try {
     await supabase
       .from("transactions")
-      .update({ status: "failed" })
+      .update({ status: "expired" })
       .eq("provider_transaction_id", coinbaseChargeId)
       .eq("status", "pending");
   } catch (err) {
@@ -873,6 +891,12 @@ const resetPaymentState = () => {
 ></div>
 
 {paymentStatus === "pending" && "Waiting for Payment"}
+{paymentStatus === "pending" && timeLeft !== null && (
+  <div className="mt-2 text-xs text-gray-500">
+    Expires in {Math.floor(timeLeft / 60000)}:
+    {String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, "0")}
+  </div>
+)}
 {paymentStatus === "processing" && "Processing Payment"}
 {paymentStatus === "failed" && "Payment Failed"}
 </div>
