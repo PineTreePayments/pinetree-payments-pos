@@ -14,7 +14,7 @@ type Provider = "Shift4" | "Coinbase Commerce";
 
 function CardWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-gray-50 rounded-2xl shadow-inner p-6 min-h-[500px] flex flex-col">
+    <div className="bg-gray-50 rounded-2xl shadow-inner p-6 h-[520px] flex flex-col overflow-hidden">
       {children}
     </div>
   );
@@ -535,10 +535,10 @@ const resetPaymentState = () => {
   const menuBtnDangerClass =
     "w-full py-2.5 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition";
   const keypadBtnClass =
-    "py-3.5 text-lg font-semibold rounded-xl bg-white border border-gray-200 shadow-sm text-black hover:bg-gray-100 active:bg-gray-200 transition";
-  const keypadSmallBtnClass =
-    "py-3.5 text-sm font-semibold rounded-xl bg-white border border-gray-200 shadow-sm text-black hover:bg-gray-100 active:bg-gray-200 transition";
+  "h-16 flex items-center justify-center text-lg font-semibold rounded-xl bg-white border border-gray-200 shadow-sm text-black hover:bg-gray-100 active:bg-gray-200 transition";
 
+const keypadSmallBtnClass =
+  "h-16 flex items-center justify-center text-sm font-semibold rounded-xl bg-white border border-gray-200 shadow-sm text-black hover:bg-gray-100 active:bg-gray-200 transition";
   if (authLoading) {
     return (
       <div className="h-screen flex items-center justify-center text-black">
@@ -1004,7 +1004,7 @@ const resetPaymentState = () => {
               {transactions.length === 0 ? (
   <p className="text-black">No transactions yet.</p>
 ) : (
-  <div className="space-y-3">
+  <div className="space-y-3 overflow-y-auto flex-1 pr-1">
     {transactions.map((tx) => (
   <div
     key={tx.id}
