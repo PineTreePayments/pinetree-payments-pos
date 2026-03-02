@@ -582,26 +582,7 @@ const resetPaymentState = () => {
         <div className="relative z-10">
           {currentPage === "dashboard" && (
             <CardWrapper>
-              <div className="absolute top-6 right-6 flex items-center gap-2">
-                <div className="absolute top-6 right-6 flex items-center gap-2">
-  <div
-    className={`w-3 h-3 rounded-full ${
-      provider === "Coinbase Commerce"
-        ? apiConnected
-          ? "bg-green-500"
-          : "bg-red-500"
-        : "bg-gray-400"
-    }`}
-  />
-  <span className="text-xs font-medium text-black">
-    {provider === "Coinbase Commerce"
-      ? apiConnected
-        ? "Configured"
-        : "Not Configured"
-      : "Application Required"}
-  </span>
-</div>
-              </div>
+              
 
               <h2 className="text-xl font-semibold mb-6 text-black">
                 Merchant Dashboard
@@ -713,6 +694,11 @@ const resetPaymentState = () => {
                     >
                       Apply with Shift4
                     </button>
+                    <div className="mt-3 flex justify-center">
+  <div className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-xs font-medium">
+    Application Required
+  </div>
+</div>
                   </>
                 )}
               </div>
